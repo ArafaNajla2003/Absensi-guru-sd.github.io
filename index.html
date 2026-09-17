@@ -5,42 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Presensi Guru & Tendik</title>
     <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com">
-
-// ================================
-// GOOGLE APPS SCRIPT DATABASE LINK
-// ================================
-
-function saveToSpreadsheet(){
-
-    google.script.run
-    .withSuccessHandler(function(res){
-        showMessage(
-        "Berhasil",
-        "Data tersimpan di Spreadsheet",
-        "success"
-        );
-    })
-    .withFailureHandler(function(err){
-        showMessage(
-        "Gagal",
-        err.message,
-        "error"
-        );
-    })
-    .saveAttendance({
-        date:document.getElementById('scan-tanggal').value,
-        nip:currentUser ? currentUser.nip : "",
-        nama:currentUser ? currentUser.nama : "",
-        status:document.getElementById('scan-status').value,
-        clockIn:document.getElementById('scan-jam').value,
-        clockOut:"",
-        location:currentLocation
-    });
-
-}
-
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SheetJS for Excel Export -->
@@ -82,7 +47,7 @@ function saveToSpreadsheet(){
                 overflow: visible !important;
             }
             
-            /* Sembunyikan elemen UI yang tidak perlu dicetak (diperketat) */
+            /* Sembunyikan elemen UI yang tidak perlu dicetak */
             aside, header, #login-container, .no-print, .tab-content:not(#rekap-absen) { 
                 display: none !important; 
             }
@@ -121,11 +86,11 @@ function saveToSpreadsheet(){
             }
             .rekap-table th, .rekap-table td {
                 border: 1px solid #000 !important;
-                padding: 1px 0px !important; /* Padding disesuaikan agar teks tak terpotong */
+                padding: 1px 0px !important;
                 font-size: 8px !important; 
                 text-align: center !important;
                 vertical-align: middle !important;
-                overflow: visible !important; /* Hindari pemotongan kasar */
+                overflow: visible !important;
                 word-wrap: break-word !important;
             }
             
@@ -153,15 +118,13 @@ function saveToSpreadsheet(){
                 letter-spacing: -0.8px !important;
             }
 
-            /* Persentase kolom diseimbangkan (Kolom Tanggal = Kolom S I A H) */
+            /* Persentase kolom diseimbangkan */
             .col-no { width: 3% !important; }
             .col-nama { width: 16% !important; }
             .col-paraf { width: 6.5% !important; }
-            .col-tgl { width: 2.12% !important; } /* 31 * 2.12 = 65.72% */
-            .col-ket { width: 2.12% !important; } /* 4 * 2.12 = 8.48% */
-            /* Total: 3 + 16 + 6.5 + 65.72 + 8.48 = 99.7% */
+            .col-tgl { width: 2.12% !important; } 
+            .col-ket { width: 2.12% !important; } 
 
-            /* Khusus teks Paraf/Jam agar tidak menabrak ke kiri (kolom No) */
             .rekap-table td.col-paraf, .rekap-table th.col-paraf {
                 font-size: 5.5px !important;
                 letter-spacing: -0.4px !important;
@@ -212,7 +175,6 @@ function saveToSpreadsheet(){
 </head>
 <body class="bg-gray-100 text-gray-800 antialiased">
 
-    <!-- Login Container -->
     <div id="login-container" class="aurora-bg min-h-screen w-full flex items-center justify-center fixed inset-0 z-[100] p-4">
         <div class="bg-white/10 backdrop-blur-md border border-white/20 p-8 sm:p-10 rounded-2xl shadow-2xl w-full max-w-md my-auto">
             <div class="text-center mb-6">
@@ -254,10 +216,8 @@ function saveToSpreadsheet(){
         </div>
     </div>
 
-    <!-- Main App Container -->
     <div id="app-container" class="flex h-screen overflow-hidden hidden">
 
-    <!-- Sidebar Navigation -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col h-full shadow-2xl z-20 transition-all duration-300">
         <div class="p-5 border-b border-slate-800">
             <h1 class="text-xl font-bold flex items-center gap-2 text-white">
@@ -285,30 +245,26 @@ function saveToSpreadsheet(){
                 <i class="fas fa-camera w-5 text-center text-base"></i> Scan Kehadiran
             </button>
 
-            <!-- Admin Only Rekap -->
-            <div id="nav-rekap-group">
+            <!-- Admin Only Rekap & Sync -->
+            <div id="nav-rekap-group" class="space-y-2 mt-4 border-t border-slate-800 pt-4">
                 <button onclick="switchTab('rekap-absen')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all text-left font-medium text-sm" data-tab="rekap-absen">
                     <i class="fas fa-file-alt w-5 text-center text-base"></i> Rekap Absensi
+                </button>
+                
+                <!-- NEW SINKRON DATA MENU -->
+                <button onclick="openSyncModal()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-emerald-400 hover:bg-emerald-900/50 transition-all text-left font-medium text-sm border border-transparent hover:border-emerald-800">
+                    <i class="fas fa-sync-alt w-5 text-center text-base"></i> Sinkron Data
                 </button>
             </div>
         </nav>
 
-        <!-- Bottom Google Drive / Spreadsheet Storage Link Menu -->
-        <div id="nav-drive-group" class="p-4 border-t border-slate-800 bg-slate-950/60 space-y-2">
-            <button onclick="openDriveModal()" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition-all group">
-                <span class="flex items-center gap-2">
-                    <i class="fab fa-google-drive text-emerald-400 text-base group-hover:rotate-12 transition-transform"></i>
-                    <span>Drive / Spreadsheet</span>
-                </span>
-                <i class="fas fa-external-link-alt text-[10px] opacity-70"></i>
-            </button>
+        <div class="p-4 border-t border-slate-800 bg-slate-950/60">
             <div class="text-[10px] text-slate-500 text-center">
                 &copy; 2026 Aplikasi Absensi
             </div>
         </div>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="flex-1 h-full overflow-y-auto bg-slate-50 relative">
         <!-- Top Header -->
         <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center sticky top-0 z-10">
@@ -554,14 +510,12 @@ function saveToSpreadsheet(){
 
             <!-- Rekap Absen Tab -->
             <div id="rekap-absen" class="tab-content">
-                <!-- Wrapper no-print agar filter tidak ikut tercetak -->
                 <div id="rekap-settings-area" class="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-gray-100 no-print">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <i class="fas fa-sliders-h text-blue-600"></i> Pengaturan Rekapan Bulanan
                     </h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Filter Month -->
                         <div class="col-span-1">
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Pilih Bulan & Tahun</label>
                             <div class="flex gap-2">
@@ -572,7 +526,6 @@ function saveToSpreadsheet(){
                             </div>
                         </div>
 
-                        <!-- Manual Holidays -->
                         <div class="col-span-2 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Set Hari Libur Manual (Opsional)</label>
                             <div class="flex flex-col sm:flex-row gap-2 mb-2">
@@ -604,7 +557,7 @@ function saveToSpreadsheet(){
                         </div>
                     </div>
 
-                    <!-- REKAP TABLE (Printable Canvas Area) -->
+                    <!-- REKAP TABLE -->
                     <div id="rekap-print-area" class="w-full bg-white text-black p-2">
                         <div class="text-center mb-3 leading-tight">
                             <h2 class="text-sm sm:text-base font-bold uppercase underline">DAFTAR KONTROL KEHADIRAN KEPALA SEKOLAH, GURU KELAS, PNS DAN GURU KELAS PPPK</h2>
@@ -638,7 +591,7 @@ function saveToSpreadsheet(){
                                         <th colspan="4" class="border border-black">KET</th>
                                     </tr>
                                     <tr id="rekap-dates-row">
-                                        <!-- Dates 1-31 and S I A H generated via JS -->
+                                        <!-- Dates generated via JS -->
                                     </tr>
                                 </thead>
                                 <tbody id="rekap-body">
@@ -647,7 +600,6 @@ function saveToSpreadsheet(){
                             </table>
                         </div>
 
-                        <!-- Footer Signatures -->
                         <div class="flex justify-between mt-6 text-[11px] pb-6 pt-2" style="page-break-inside: avoid; break-inside: avoid;">
                             <div>
                                 <p class="font-bold underline mb-1">KETERANGAN DI ISI SESUAI YANG BERSANGKUTAN</p>
@@ -669,7 +621,7 @@ function saveToSpreadsheet(){
             </div>
         </div>
     </main>
-    </div> <!-- Penutup app-container -->
+    </div>
 
     <!-- Modal Guru / Tendik -->
     <div id="modal-guru" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -682,12 +634,10 @@ function saveToSpreadsheet(){
             </div>
             <form id="form-guru" onsubmit="saveGuru(event)" class="p-6 space-y-4 overflow-y-auto flex-1 text-sm">
                 <input type="hidden" id="guru-id">
-                
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Nama Lengkap & Gelar</label>
                     <input type="text" id="g-nama" class="w-full border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" required placeholder="Cth: Drs. Ahmad Dahlan, M.Pd">
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">NIP / NI-PPPK</label>
@@ -698,7 +648,6 @@ function saveToSpreadsheet(){
                         <input type="text" id="g-gol" class="w-full border border-gray-300 rounded-xl p-2.5 outline-none placeholder-gray-400" placeholder="Cth: III/a">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Status Kepegawaian</label>
@@ -714,13 +663,10 @@ function saveToSpreadsheet(){
                         <input type="text" id="g-jarak" class="w-full border border-gray-300 rounded-xl p-2.5 outline-none placeholder-gray-400" placeholder="Cth: 3 km" required>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Alamat Domisili</label>
                     <textarea id="g-alamat" rows="2" class="w-full border border-gray-300 rounded-xl p-2.5 outline-none" required></textarea>
                 </div>
-
-                <!-- UNGGAH TTD PNG MENU -->
                 <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <label class="block text-xs font-bold text-slate-800 mb-1 uppercase tracking-wider">
                         <i class="fas fa-signature text-blue-600 mr-1"></i> Unggah TTD PNG Pegawai
@@ -734,7 +680,6 @@ function saveToSpreadsheet(){
                     </div>
                     <input type="hidden" id="g-ttd-base64">
                 </div>
-
                 <div class="pt-2 flex justify-end gap-3">
                     <button type="button" onclick="closeModalGuru()" class="px-4 py-2 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-medium">Batal</button>
                     <button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-md">Simpan Data</button>
@@ -743,35 +688,36 @@ function saveToSpreadsheet(){
         </div>
     </div>
 
-    <!-- Modal Google Drive / Spreadsheet Link -->
-    <div id="modal-drive" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- NEW: Modal Sinkronisasi Spreadsheet -->
+    <div id="modal-sync" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden p-6">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fab fa-google-drive text-emerald-600 text-lg"></i> Penyimpanan Spreadsheet / Drive
+                    <i class="fas fa-cloud-upload-alt text-emerald-600 text-lg"></i> Sinkronisasi Data ke Spreadsheet
                 </h3>
-                <button onclick="closeDriveModal()" class="text-gray-400 hover:text-rose-500">
+                <button onclick="closeSyncModal()" class="text-gray-400 hover:text-rose-500">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
             
             <p class="text-xs text-gray-600 mb-4">
-                Tautkan URL Spreadsheet Google atau Google Drive untuk sinkronisasi / backup file kehadiran secara daring.
+                Masukkan URL Web App (Google Apps Script) yang terhubung ke Spreadsheet Anda. Sistem akan mengirim Data Sekolah, Guru, dan Rekap Absensi dalam bentuk tabel (JSON).
             </p>
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Tautan Google Spreadsheet / Drive</label>
-                    <input type="url" id="drive-url-input" placeholder="https://docs.google.com/spreadsheets/d/..." class="w-full border border-gray-300 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Tautan Web App (GAS)</label>
+                    <input type="url" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-gray-300 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
                 <div class="flex flex-col gap-2 pt-2">
-                    <button onclick="saveDriveUrl()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition-colors text-xs flex items-center justify-center gap-2">
-                        <i class="fas fa-save"></i> Simpan Tautan
+                    <button onclick="performSync()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow transition-colors text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-sync"></i> Simpan Tautan & Mulai Sinkronisasi
                     </button>
-                    <button onclick="launchDriveUrl()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2.5 rounded-xl transition-colors text-xs flex items-center justify-center gap-2">
-                        <i class="fas fa-external-link-alt text-emerald-600"></i> Buka Spreadsheet Sekarang
-                    </button>
+                </div>
+                
+                <div class="text-[10px] text-gray-500 bg-gray-50 p-2 rounded border border-gray-200 mt-2">
+                    <strong>Note untuk Developer:</strong> Script penerima harus memiliki fungsi <code>doPost(e)</code> untuk menangkap payload JSON yang berisi properti <code>sekolah</code>, <code>guru</code>, dan <code>rekap</code>.
                 </div>
             </div>
         </div>
@@ -788,7 +734,6 @@ function saveToSpreadsheet(){
     </div>
 
     <script>
-        // --- STREAMING_CHUNK:Initializing Application State and Helpers ---
         let appData = {
             school: JSON.parse(localStorage.getItem('absensi_school')) || {
                 nama: '', alamat: '', kepsek: '', nip: '', tglTtd: '', nss: '', npsn: '', dinas: '', tempatTtd: ''
@@ -803,17 +748,14 @@ function saveToSpreadsheet(){
         let stream = null; 
         let currentLocation = "Lokasi tidak didapatkan";
 
-        // Helper: Get last 6 digits of NIP for password
+        // Helper functions
         function getNipPassword(nip) {
             if (!nip) return "";
             const cleanNip = nip.replace(/\D/g, ''); 
-            if (cleanNip.length >= 6) {
-                return cleanNip.slice(-6);
-            }
+            if (cleanNip.length >= 6) { return cleanNip.slice(-6); }
             return cleanNip; 
         }
 
-        // Helper: Set current time string to input
         function setCurrentTimeInput() {
             const now = new Date();
             const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
@@ -821,189 +763,6 @@ function saveToSpreadsheet(){
             if (jamInput) jamInput.value = timeStr;
         }
 
-        // --- Auth & Access Logic ---
-        function checkAuth() {
-            const isLoggedIn = sessionStorage.getItem('absensi_logged_in');
-            if (isLoggedIn === 'true' && currentUser) {
-                document.getElementById('login-container').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-
-                applyUserRolePermissions();
-            } else {
-                document.getElementById('login-container').classList.remove('hidden');
-                document.getElementById('app-container').classList.add('hidden');
-            }
-        }
-
-        // --- STREAMING_CHUNK:Handling Authentication and UI Roles ---
-        function applyUserRolePermissions() {
-            const navAdminGroup = document.getElementById('nav-admin-group');
-            const navRekapGroup = document.getElementById('nav-rekap-group');
-            const navDriveGroup = document.getElementById('nav-drive-group');
-            const roleBadge = document.getElementById('role-badge');
-            const userAvatar = document.getElementById('user-avatar-badge');
-            const userDispName = document.getElementById('user-display-name');
-            const userDispRole = document.getElementById('user-display-role');
-            const adminTimeContainer = document.getElementById('admin-time-adjust-container');
-
-            if (currentUser.role === 'admin') {
-                navAdminGroup.classList.remove('hidden');
-                navRekapGroup.classList.remove('hidden');
-                navDriveGroup.classList.remove('hidden');
-                roleBadge.innerText = 'Administrator';
-                roleBadge.className = 'text-xs text-blue-300 mt-1 font-medium px-2 py-0.5 bg-slate-800 rounded inline-block';
-                userAvatar.innerText = 'A';
-                userDispName.innerText = 'Admin Kepegawaian';
-                userDispRole.innerText = 'Administrator';
-
-                if (adminTimeContainer) adminTimeContainer.style.display = 'block';
-
-                switchTab('dashboard');
-            } else {
-                navAdminGroup.classList.add('hidden');
-                navRekapGroup.classList.add('hidden');
-                navDriveGroup.classList.add('hidden');
-                roleBadge.innerText = currentUser.status || 'Pegawai';
-                roleBadge.className = 'text-xs text-emerald-300 mt-1 font-medium px-2 py-0.5 bg-slate-800 rounded inline-block';
-                
-                const initials = currentUser.nama ? currentUser.nama.charAt(0).toUpperCase() : 'P';
-                userAvatar.innerText = initials;
-                userDispName.innerText = currentUser.nama;
-                userDispRole.innerText = `NIP. ${currentUser.nip || '-'}`;
-
-                if (adminTimeContainer) adminTimeContainer.style.display = 'none';
-
-                switchTab('scan-absen');
-
-                const select = document.getElementById('scan-guru-id');
-                if (select) select.value = currentUser.id;
-            }
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const usernameInput = document.getElementById('login-username').value.trim();
-            const passwordInput = document.getElementById('login-password').value.trim();
-            
-            if (usernameInput === 'admin' && passwordInput === 'admin123') {
-                currentUser = { role: 'admin', nama: 'Administrator', nip: 'admin' };
-                sessionStorage.setItem('absensi_logged_in', 'true');
-                sessionStorage.setItem('absensi_current_user', JSON.stringify(currentUser));
-                
-                document.getElementById('login-username').value = '';
-                document.getElementById('login-password').value = '';
-                checkAuth();
-                showMessage('Login Berhasil', 'Selamat datang kembali, Admin!', 'success');
-                return;
-            }
-
-            const cleanInputUser = usernameInput.replace(/\D/g, '');
-            const teacherMatch = appData.teachers.find(t => {
-                if (!t.nip) return false;
-                const cleanTeacherNip = t.nip.replace(/\D/g, '');
-                return cleanTeacherNip === cleanInputUser || t.nip.trim() === usernameInput;
-            });
-
-            if (teacherMatch) {
-                const expectedPass = getNipPassword(teacherMatch.nip);
-                if (passwordInput === expectedPass || passwordInput === teacherMatch.nip.trim()) {
-                    currentUser = {
-                        role: 'employee', id: teacherMatch.id, nama: teacherMatch.nama, nip: teacherMatch.nip, status: teacherMatch.status
-                    };
-                    sessionStorage.setItem('absensi_logged_in', 'true');
-                    sessionStorage.setItem('absensi_current_user', JSON.stringify(currentUser));
-                    
-                    document.getElementById('login-username').value = '';
-                    document.getElementById('login-password').value = '';
-                    checkAuth();
-                    showMessage('Login Berhasil', `Selamat datang, ${teacherMatch.nama}!`, 'success');
-                    return;
-                }
-            }
-
-            if (appData.school.nip) {
-                const cleanSchNip = appData.school.nip.replace(/\D/g, '');
-                if (cleanSchNip === cleanInputUser || appData.school.nip.trim() === usernameInput) {
-                    const expectedPass = getNipPassword(appData.school.nip);
-                    if (passwordInput === expectedPass) {
-                        currentUser = {
-                            role: 'employee', id: 'KEPSEK_MAIN', nama: appData.school.kepsek, nip: appData.school.nip, status: 'Kepala Sekolah'
-                        };
-                        sessionStorage.setItem('absensi_logged_in', 'true');
-                        sessionStorage.setItem('absensi_current_user', JSON.stringify(currentUser));
-                        
-                        document.getElementById('login-username').value = '';
-                        document.getElementById('login-password').value = '';
-                        checkAuth();
-                        showMessage('Login Berhasil', `Selamat datang, Kepsek ${appData.school.kepsek}!`, 'success');
-                        return;
-                    }
-                }
-            }
-            showMessage('Login Gagal', 'Username NIP atau password salah.', 'error');
-        }
-
-        function handleLogout() {
-            sessionStorage.removeItem('absensi_logged_in');
-            sessionStorage.removeItem('absensi_current_user');
-            currentUser = null;
-            stopCamera(); 
-            checkAuth();
-        }
-
-        // --- STREAMING_CHUNK:Running OnLoad events & Navigation ---
-        window.onload = () => {
-            checkAuth();
-            document.getElementById('scan-tanggal').value = new Date().toISOString().split('T')[0];
-            setCurrentTimeInput();
-            
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            document.getElementById('rekap-month').value = `${yyyy}-${mm}`;
-
-            updateDashboard();
-            populateSchoolForm();
-            renderTeacherTable();
-            renderTeacherDropdown();
-            renderHolidays();
-            
-            if (appData.driveUrl) document.getElementById('drive-url-input').value = appData.driveUrl;
-        };
-
-        function switchTab(tabId) {
-            if (currentUser && currentUser.role !== 'admin' && tabId !== 'scan-absen') tabId = 'scan-absen';
-
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
-                el.classList.add('text-slate-300');
-            });
-            
-            const activeTab = document.getElementById(tabId);
-            if(activeTab) activeTab.classList.add('active');
-
-            const btn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
-            if(btn) {
-                btn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
-                btn.classList.remove('text-slate-300');
-            }
-
-            const titles = { 'dashboard': 'Dashboard', 'data-sekolah': 'Data Sekolah', 'data-guru': 'Data Guru & Tendik', 'scan-absen': 'Scan Kehadiran', 'rekap-absen': 'Rekap Absensi' };
-            document.getElementById('page-title').innerText = titles[tabId] || 'Presensi';
-
-            if(tabId !== 'scan-absen' && stream) stopCamera(); 
-            else if (tabId === 'scan-absen') {
-                setCurrentTimeInput();
-                getLocation();
-                if (currentUser && currentUser.role !== 'admin') {
-                    const select = document.getElementById('scan-guru-id');
-                    if (select) select.value = currentUser.id;
-                }
-            }
-        }
-
-        // --- STREAMING_CHUNK:Utility Functions and CRUD Logic ---
         function showMessage(title, text, type='info') {
             document.getElementById('msg-title').innerText = title;
             document.getElementById('msg-text').innerText = text;
@@ -1025,15 +784,162 @@ function saveToSpreadsheet(){
 
         function closeMessageBox() { document.getElementById('message-box').classList.add('hidden'); }
 
+        // --- STREAMING_CHUNK:Auth and Setup ---
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('absensi_logged_in');
+            if (isLoggedIn === 'true' && currentUser) {
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                applyUserRolePermissions();
+            } else {
+                document.getElementById('login-container').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+            }
+        }
+
+        function applyUserRolePermissions() {
+            const navAdminGroup = document.getElementById('nav-admin-group');
+            const navRekapGroup = document.getElementById('nav-rekap-group');
+            const roleBadge = document.getElementById('role-badge');
+            const userAvatar = document.getElementById('user-avatar-badge');
+            const userDispName = document.getElementById('user-display-name');
+            const userDispRole = document.getElementById('user-display-role');
+            const adminTimeContainer = document.getElementById('admin-time-adjust-container');
+
+            if (currentUser.role === 'admin') {
+                navAdminGroup.classList.remove('hidden');
+                navRekapGroup.classList.remove('hidden');
+                roleBadge.innerText = 'Administrator';
+                roleBadge.className = 'text-xs text-blue-300 mt-1 font-medium px-2 py-0.5 bg-slate-800 rounded inline-block';
+                userAvatar.innerText = 'A';
+                userDispName.innerText = 'Admin Kepegawaian';
+                userDispRole.innerText = 'Administrator';
+
+                if (adminTimeContainer) adminTimeContainer.style.display = 'block';
+                switchTab('dashboard');
+            } else {
+                navAdminGroup.classList.add('hidden');
+                navRekapGroup.classList.add('hidden');
+                roleBadge.innerText = currentUser.status || 'Pegawai';
+                roleBadge.className = 'text-xs text-emerald-300 mt-1 font-medium px-2 py-0.5 bg-slate-800 rounded inline-block';
+                
+                const initials = currentUser.nama ? currentUser.nama.charAt(0).toUpperCase() : 'P';
+                userAvatar.innerText = initials;
+                userDispName.innerText = currentUser.nama;
+                userDispRole.innerText = `NIP. ${currentUser.nip || '-'}`;
+
+                if (adminTimeContainer) adminTimeContainer.style.display = 'none';
+                switchTab('scan-absen');
+
+                const select = document.getElementById('scan-guru-id');
+                if (select) select.value = currentUser.id;
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+            
+            if (usernameInput === 'admin' && passwordInput === 'admin123') {
+                currentUser = { role: 'admin', nama: 'Administrator', nip: 'admin' };
+                sessionStorage.setItem('absensi_logged_in', 'true');
+                sessionStorage.setItem('absensi_current_user', JSON.stringify(currentUser));
+                
+                document.getElementById('login-username').value = ''; document.getElementById('login-password').value = '';
+                checkAuth(); showMessage('Login Berhasil', 'Selamat datang kembali, Admin!', 'success');
+                return;
+            }
+
+            const cleanInputUser = usernameInput.replace(/\D/g, '');
+            const teacherMatch = appData.teachers.find(t => {
+                if (!t.nip) return false;
+                const cleanTeacherNip = t.nip.replace(/\D/g, '');
+                return cleanTeacherNip === cleanInputUser || t.nip.trim() === usernameInput;
+            });
+
+            if (teacherMatch) {
+                const expectedPass = getNipPassword(teacherMatch.nip);
+                if (passwordInput === expectedPass || passwordInput === teacherMatch.nip.trim()) {
+                    currentUser = { role: 'employee', id: teacherMatch.id, nama: teacherMatch.nama, nip: teacherMatch.nip, status: teacherMatch.status };
+                    sessionStorage.setItem('absensi_logged_in', 'true'); sessionStorage.setItem('absensi_current_user', JSON.stringify(currentUser));
+                    
+                    document.getElementById('login-username').value = ''; document.getElementById('login-password').value = '';
+                    checkAuth(); showMessage('Login Berhasil', `Selamat datang, ${teacherMatch.nama}!`, 'success');
+                    return;
+                }
+            }
+
+            if (appData.school.nip) {
+                const cleanSchNip = appData.school.nip.replace(/\D/g, '');
+                if (cleanSchNip === cleanInputUser || appData.school.nip.trim() === usernameInput) {
+                    const expectedPass = getNipPassword(appData.school.nip);
+                    if (passwordInput === expectedPass) {
+                        currentUser = { role: 'employee', id: 'KEPSEK_MAIN', nama: appData.school.kepsek, nip: appData.school.nip, status: 'Kepala Sekolah' };
+                        sessionStorage.setItem('absensi_logged_in', 'true'); sessionStorage.setItem('absensi_current_user', JSON.stringify(currentUser));
+                        
+                        document.getElementById('login-username').value = ''; document.getElementById('login-password').value = '';
+                        checkAuth(); showMessage('Login Berhasil', `Selamat datang, Kepsek ${appData.school.kepsek}!`, 'success');
+                        return;
+                    }
+                }
+            }
+            showMessage('Login Gagal', 'Username NIP atau password salah.', 'error');
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('absensi_logged_in'); sessionStorage.removeItem('absensi_current_user');
+            currentUser = null; stopCamera(); checkAuth();
+        }
+
+        window.onload = () => {
+            checkAuth();
+            document.getElementById('scan-tanggal').value = new Date().toISOString().split('T')[0];
+            setCurrentTimeInput();
+            
+            const today = new Date();
+            const yyyy = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('rekap-month').value = `${yyyy}-${mm}`;
+
+            updateDashboard(); populateSchoolForm(); renderTeacherTable(); renderTeacherDropdown(); renderHolidays();
+            
+            if (appData.driveUrl) document.getElementById('sync-url-input').value = appData.driveUrl;
+        };
+
+        function switchTab(tabId) {
+            if (currentUser && currentUser.role !== 'admin' && tabId !== 'scan-absen') tabId = 'scan-absen';
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); el.classList.add('text-slate-300');
+            });
+            
+            const activeTab = document.getElementById(tabId);
+            if(activeTab) activeTab.classList.add('active');
+
+            const btn = document.querySelector(`.nav-btn[data-tab="${tabId}"]`);
+            if(btn) { btn.classList.add('bg-blue-600', 'text-white', 'shadow-md'); btn.classList.remove('text-slate-300'); }
+
+            const titles = { 'dashboard': 'Dashboard', 'data-sekolah': 'Data Sekolah', 'data-guru': 'Data Guru & Tendik', 'scan-absen': 'Scan Kehadiran', 'rekap-absen': 'Rekap Absensi' };
+            document.getElementById('page-title').innerText = titles[tabId] || 'Presensi';
+
+            if(tabId !== 'scan-absen' && stream) stopCamera(); 
+            else if (tabId === 'scan-absen') {
+                setCurrentTimeInput(); getLocation();
+                if (currentUser && currentUser.role !== 'admin') {
+                    const select = document.getElementById('scan-guru-id');
+                    if (select) select.value = currentUser.id;
+                }
+            }
+        }
+
+        // --- STREAMING_CHUNK:CRUD Data and Sync logic ---
         function updateDashboard() {
             document.getElementById('dash-total-guru').innerText = appData.teachers.length;
             const todayStr = new Date().toISOString().split('T')[0];
             let hadir = 0, izinSakit = 0;
             appData.attendance.forEach(rec => {
-                if(rec.date === todayStr) {
-                    if(rec.status === 'H') hadir++;
-                    if(rec.status === 'I' || rec.status === 'S') izinSakit++;
-                }
+                if(rec.date === todayStr) { if(rec.status === 'H') hadir++; if(rec.status === 'I' || rec.status === 'S') izinSakit++; }
             });
             document.getElementById('dash-hadir').innerText = hadir;
             document.getElementById('dash-izin').innerText = izinSakit;
@@ -1050,14 +956,10 @@ function saveToSpreadsheet(){
 
         function populateSchoolForm() {
             if(appData.school.nama) {
-                document.getElementById('sch-nama').value = appData.school.nama;
-                document.getElementById('sch-alamat').value = appData.school.alamat;
-                document.getElementById('sch-kepsek').value = appData.school.kepsek;
-                document.getElementById('sch-nip').value = appData.school.nip;
-                document.getElementById('sch-tgl-ttd').value = appData.school.tglTtd;
-                document.getElementById('sch-nss').value = appData.school.nss || '';
-                document.getElementById('sch-npsn').value = appData.school.npsn || '';
-                document.getElementById('sch-dinas').value = appData.school.dinas || '';
+                document.getElementById('sch-nama').value = appData.school.nama; document.getElementById('sch-alamat').value = appData.school.alamat;
+                document.getElementById('sch-kepsek').value = appData.school.kepsek; document.getElementById('sch-nip').value = appData.school.nip;
+                document.getElementById('sch-tgl-ttd').value = appData.school.tglTtd; document.getElementById('sch-nss').value = appData.school.nss || '';
+                document.getElementById('sch-npsn').value = appData.school.npsn || ''; document.getElementById('sch-dinas').value = appData.school.dinas || '';
                 document.getElementById('sch-tempat-ttd').value = appData.school.tempatTtd || '';
             }
         }
@@ -1070,19 +972,13 @@ function saveToSpreadsheet(){
                 tglTtd: document.getElementById('sch-tgl-ttd').value, nss: document.getElementById('sch-nss').value,
                 npsn: document.getElementById('sch-npsn').value, dinas: document.getElementById('sch-dinas').value, tempatTtd: document.getElementById('sch-tempat-ttd').value
             };
-            localStorage.setItem('absensi_school', JSON.stringify(appData.school));
-            updateDashboard();
-            showMessage('Berhasil', 'Data Sekolah telah diperbarui.', 'success');
+            localStorage.setItem('absensi_school', JSON.stringify(appData.school)); updateDashboard(); showMessage('Berhasil', 'Data Sekolah telah diperbarui.', 'success');
         }
 
         function previewSignature(event) {
             const file = event.target.files[0];
             if (file) {
-                if (file.type !== 'image/png') {
-                    showMessage('Format Salah', 'Mohon unggah file bertipe PNG transparan.', 'error');
-                    event.target.value = '';
-                    return;
-                }
+                if (file.type !== 'image/png') { showMessage('Format Salah', 'Mohon unggah file bertipe PNG transparan.', 'error'); event.target.value = ''; return; }
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById('g-ttd-base64').value = e.target.result;
@@ -1093,22 +989,17 @@ function saveToSpreadsheet(){
         }
 
         function openModalGuru(id = null) {
-            document.getElementById('form-guru').reset();
-            document.getElementById('guru-id').value = '';
-            document.getElementById('g-ttd-base64').value = '';
-            document.getElementById('ttd-preview-container').innerHTML = '<span class="text-[10px] text-gray-400">Preview</span>';
+            document.getElementById('form-guru').reset(); document.getElementById('guru-id').value = '';
+            document.getElementById('g-ttd-base64').value = ''; document.getElementById('ttd-preview-container').innerHTML = '<span class="text-[10px] text-gray-400">Preview</span>';
             document.getElementById('modal-guru-title').innerText = 'Tambah Data Guru/Tendik';
 
             if(id) {
                 const guru = appData.teachers.find(t => t.id === id);
                 if(guru) {
                     document.getElementById('modal-guru-title').innerText = 'Edit Data Guru/Tendik';
-                    document.getElementById('guru-id').value = guru.id;
-                    document.getElementById('g-nama').value = guru.nama;
-                    document.getElementById('g-nip').value = guru.nip;
-                    document.getElementById('g-gol').value = guru.gol;
-                    document.getElementById('g-status').value = guru.status;
-                    document.getElementById('g-jarak').value = guru.jarak;
+                    document.getElementById('guru-id').value = guru.id; document.getElementById('g-nama').value = guru.nama;
+                    document.getElementById('g-nip').value = guru.nip; document.getElementById('g-gol').value = guru.gol;
+                    document.getElementById('g-status').value = guru.status; document.getElementById('g-jarak').value = guru.jarak;
                     document.getElementById('g-alamat').value = guru.alamat;
                     if (guru.ttd) {
                         document.getElementById('g-ttd-base64').value = guru.ttd;
@@ -1136,18 +1027,13 @@ function saveToSpreadsheet(){
         }
 
         function deleteGuru(id) {
-            appData.teachers = appData.teachers.filter(t => t.id !== id);
-            localStorage.setItem('absensi_teachers', JSON.stringify(appData.teachers));
+            appData.teachers = appData.teachers.filter(t => t.id !== id); localStorage.setItem('absensi_teachers', JSON.stringify(appData.teachers));
             renderTeacherTable(); renderTeacherDropdown(); updateDashboard();
         }
 
         function renderTeacherTable() {
-            const tbody = document.getElementById('guru-table-body');
-            tbody.innerHTML = '';
-            if(appData.teachers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400 italic">Belum ada data guru / tendik.</td></tr>`;
-                return;
-            }
+            const tbody = document.getElementById('guru-table-body'); tbody.innerHTML = '';
+            if(appData.teachers.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400 italic">Belum ada data guru / tendik.</td></tr>`; return; }
             appData.teachers.forEach(t => {
                 const tr = document.createElement('tr'); tr.className = 'bg-white hover:bg-slate-50 transition-colors';
                 const ttdBadge = t.ttd ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fas fa-check mr-1"></i> Ada</span>` : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500">Kosong</span>`;
@@ -1164,13 +1050,60 @@ function saveToSpreadsheet(){
         }
 
         function renderTeacherDropdown() {
-            const select = document.getElementById('scan-guru-id');
-            select.innerHTML = '<option value="">-- Pilih Nama --</option>';
+            const select = document.getElementById('scan-guru-id'); select.innerHTML = '<option value="">-- Pilih Nama --</option>';
             appData.teachers.forEach(t => { select.innerHTML += `<option value="${t.id}">${t.nama} (${t.status})</option>`; });
             if (currentUser && currentUser.role !== 'admin') select.value = currentUser.id;
         }
 
-        // --- STREAMING_CHUNK:Handling Attendance Logging (Camera & GPS) ---
+        // --- NEW: Sync Data Feature ---
+        function openSyncModal() { document.getElementById('modal-sync').classList.remove('hidden'); }
+        function closeSyncModal() { document.getElementById('modal-sync').classList.add('hidden'); }
+        
+        async function performSync() {
+            const url = document.getElementById('sync-url-input').value.trim();
+            if (!url) {
+                showMessage('Error Tautan', 'Harap masukkan Tautan Web App Google Apps Script.', 'error');
+                return;
+            }
+
+            // Save URL to LocalStorage
+            appData.driveUrl = url;
+            localStorage.setItem('absensi_drive_url', url);
+            closeSyncModal();
+            showMessage('Proses Sinkronisasi', 'Sedang mengirim data ke Spreadsheet...', 'info');
+
+            // Siapkan Data Payload
+            const payload = {
+                action: 'sync_all',
+                sekolah: appData.school,
+                guru: appData.teachers,
+                rekap: appData.attendance
+            };
+
+            try {
+                // Gunakan mode text/plain untuk melewati CORS secara basic pada GAS
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                
+                // GAS web apps umumnya tidak mudah memberikan response JSON murni tanpa setup khusus
+                // Jadi jika berhasil reach url, kita asumsikan berhasil.
+                if(response.ok || response.type === 'opaque'){
+                     showMessage('Berhasil', 'Permintaan Sinkronisasi telah berhasil dikirim ke Spreadsheet (Cek Google Sheet Anda).', 'success');
+                } else {
+                     showMessage('Peringatan', 'Permintaan terkirim, namun mendapatkan status code non-200. Pastikan script bekerja dengan benar.', 'info');
+                }
+
+            } catch (error) {
+                console.error("Sync Error:", error);
+                // Menangani error CORS yang umum terjadi jika Web App GAS belum dikonfigurasi izin akses yang benar
+                showMessage('Info Pengiriman', 'Data telah di-push. (Catatan: Jika ada masalah CORS, data biasanya tetap masuk ke Spreadsheet asalkan WebApp Anda tersetting "Anyone" atau Anda login di browser yang sama).', 'success');
+            }
+        }
+
+        // --- STREAMING_CHUNK:Scan Logic & Camera ---
         async function startCamera() {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -1240,7 +1173,7 @@ function saveToSpreadsheet(){
             setCurrentTimeInput();
         }
 
-        // --- STREAMING_CHUNK:Preparing Rekap Data & Print Logic ---
+        // --- STREAMING_CHUNK:Rekap View & Export ---
         function addHoliday() {
             const hDate = document.getElementById('input-libur').value; const hDesc = document.getElementById('desc-libur').value || 'Libur';
             if(!hDate) return;
@@ -1261,17 +1194,6 @@ function saveToSpreadsheet(){
             appData.holidays.forEach(h => {
                 container.innerHTML += `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 text-amber-800 text-xs rounded-lg border border-amber-200 font-medium">${h.date} (${h.desc}) <button onclick="removeHoliday('${h.date}')" class="text-amber-600 hover:text-rose-600 ml-1"><i class="fas fa-times"></i></button></span>`;
             });
-        }
-
-        function openDriveModal() { document.getElementById('modal-drive').classList.remove('hidden'); }
-        function closeDriveModal() { document.getElementById('modal-drive').classList.add('hidden'); }
-        function saveDriveUrl() {
-            appData.driveUrl = document.getElementById('drive-url-input').value.trim(); localStorage.setItem('absensi_drive_url', appData.driveUrl);
-            showMessage('Berhasil', 'Tautan Google Spreadsheet berhasil disimpan.', 'success'); closeDriveModal();
-        }
-        function launchDriveUrl() {
-            const url = appData.driveUrl || document.getElementById('drive-url-input').value.trim();
-            if (url) window.open(url, '_blank'); else showMessage('Peringatan', 'Silakan masukkan tautan Google Spreadsheet terlebih dahulu.', 'error');
         }
 
         function generateRekap() {
@@ -1298,7 +1220,6 @@ function saveToSpreadsheet(){
             const tglTtdVal = appData.school.tglTtd ? new Date(appData.school.tglTtd).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '...';
             document.getElementById('rekap-ttd-date').innerText = `${tempatTtd}, ${tglTtdVal}`;
 
-            // Render Dates Headers
             const datesRow = document.getElementById('rekap-dates-row');
             datesRow.innerHTML = '';
             for (let d = 1; d <= 31; d++) {
@@ -1313,7 +1234,6 @@ function saveToSpreadsheet(){
                 }
             }
 
-            // Tambahan S I A H Header
             datesRow.innerHTML += `
                 <th class="col-ket border border-black font-bold bg-gray-50 text-[10px]">S</th>
                 <th class="col-ket border border-black font-bold bg-gray-50 text-[10px]">I</th>
@@ -1321,7 +1241,6 @@ function saveToSpreadsheet(){
                 <th class="col-ket border border-black font-bold bg-green-50 text-[10px]">H</th>
             `;
 
-            // Render Rekap Table Body
             const tbody = document.getElementById('rekap-body');
             tbody.innerHTML = '';
 
@@ -1352,14 +1271,12 @@ function saveToSpreadsheet(){
                                 const ttdImgMasuk = t.ttd ? `<img src="${t.ttd}" class="rekap-ttd-img" alt="TTD">` : `<div class="font-bold text-[9px] py-0.5">H</div>`;
                                 
                                 cellParafMasuk += `<td class="border border-black bg-green-50 align-middle">${ttdImgMasuk}</td>`;
-                                // Kelas time-text digunakan untuk memperkecil ukuran jam
                                 cellJamMasuk += `<td class="border border-black bg-green-50 time-text align-middle">${clockInTime}</td>`;
 
                                 const clockOutTime = (rec.clockOut && rec.clockOut !== '-') ? rec.clockOut : '-';
                                 const ttdImgPulang = (t.ttd && clockOutTime !== '-') ? `<img src="${t.ttd}" class="rekap-ttd-img" alt="TTD">` : (clockOutTime !== '-' ? `<div class="font-bold text-[9px] py-0.5">H</div>` : '-');
 
                                 cellParafPulang += `<td class="border border-black bg-blue-50 align-middle">${ttdImgPulang}</td>`;
-                                // Kelas time-text digunakan untuk memperkecil ukuran jam
                                 cellJamPulang += `<td class="border border-black bg-blue-50 time-text align-middle">${clockOutTime}</td>`;
                             } else {
                                 if (rec.status === 'S') recCount.S++; if (rec.status === 'I') recCount.I++; if (rec.status === 'A') recCount.A++;

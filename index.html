@@ -48,7 +48,7 @@
             }
             
             /* Sembunyikan elemen UI yang tidak perlu dicetak */
-            aside, header, #login-container, .no-print, .tab-content:not(#rekap-absen) { 
+            aside, header, #login-container, .no-print, .tab-content:not(#rekap-absen), #sidebar-overlay { 
                 display: none !important; 
             }
 
@@ -210,15 +210,19 @@
             </form>
 
             <div class="mt-6 text-center border-t border-white/15 pt-4 space-y-1.5 text-xs text-blue-100/80">
-                <p><i class="fas fa-shield-alt text-yellow-300 mr-1"></i> <strong>Admin:</strong> <span class="bg-black/30 px-1.5 py-0.5 rounded">u****</span> / <span class="bg-black/30 px-1.5 py-0.5 rounded">P****</span></p>
+                <p><i class="fas fa-shield-alt text-yellow-300 mr-1"></i> <strong>Admin:</strong> <span class="bg-black/30 px-1.5 py-0.5 rounded">admin</span> / <span class="bg-black/30 px-1.5 py-0.5 rounded">@Asmungi#</span></p>
                 <p><i class="fas fa-user-check text-green-300 mr-1"></i> <strong>Kepsek / Guru / Tendik:</strong> Username = NIP, Password = 6 angka NIP digit terakhir.</p>
             </div>
         </div>
     </div>
 
-    <div id="app-container" class="flex h-screen overflow-hidden hidden">
+    <div id="app-container" class="flex h-screen overflow-hidden hidden relative">
 
-    <aside class="w-64 bg-slate-900 text-white flex flex-col h-full shadow-2xl z-20 transition-all duration-300">
+    <!-- Overlay untuk Sidebar di Mobile -->
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Modifikasi Sidebar: Ditambahkan absolute di mobile, relative di Desktop -->
+    <aside id="sidebar" class="w-64 bg-slate-900 text-white flex flex-col h-full shadow-2xl z-40 absolute md:relative transform -translate-x-full md:translate-x-0 transition-transform duration-300">
         <div class="p-5 border-b border-slate-800">
             <h1 class="text-xl font-bold flex items-center gap-2 text-white">
                 <i class="fas fa-school text-blue-400"></i> SIAL-absenSI digitAL V.1
@@ -265,13 +269,19 @@
         </div>
     </aside>
 
-    <main class="flex-1 h-full overflow-y-auto bg-slate-50 relative">
-        <!-- Top Header -->
-        <header class="bg-white shadow-sm border-b px-8 py-4 flex justify-between items-center sticky top-0 z-10">
-            <h2 id="page-title" class="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h2>
-            <div class="flex items-center gap-5">
-                <div class="flex items-center gap-3 border-r pr-5">
-                    <div id="user-avatar-badge" class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">
+    <main class="flex-1 w-full h-full overflow-y-auto bg-slate-50 relative">
+        <!-- Top Header: Ditambahkan tombol titik 3 -->
+        <header class="bg-white shadow-sm border-b px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-blue-600 focus:outline-none p-2 rounded-lg bg-gray-50 border border-gray-200 transition-colors">
+                    <i class="fas fa-ellipsis-v text-lg w-3 text-center"></i>
+                </button>
+                <h2 id="page-title" class="text-lg sm:text-2xl font-bold text-gray-800 tracking-tight">Dashboard</h2>
+            </div>
+            
+            <div class="flex items-center gap-3 sm:gap-5">
+                <div class="flex items-center gap-3 border-r pr-3 sm:pr-5">
+                    <div id="user-avatar-badge" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 text-sm sm:text-base">
                         A
                     </div>
                     <div class="hidden sm:block">
@@ -281,12 +291,12 @@
                 </div>
                 <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 transition-colors flex flex-col items-center justify-center group" title="Keluar dari Sistem">
                     <i class="fas fa-power-off text-lg group-hover:scale-110 transition-transform"></i>
-                    <span class="text-[10px] mt-0.5 font-medium">Keluar</span>
+                    <span class="text-[10px] mt-0.5 font-medium hidden sm:block">Keluar</span>
                 </button>
             </div>
         </header>
 
-        <div class="p-6 sm:p-8 max-w-7xl mx-auto">
+        <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
@@ -423,7 +433,6 @@
                 </div>
             </div>
 
-            <!-- Scan Absen Tab -->
             <div id="scan-absen" class="tab-content">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Left: Camera & Geolocation -->
@@ -624,7 +633,7 @@
     </div>
 
     <!-- Modal Guru / Tendik -->
-    <div id="modal-guru" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="modal-guru" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
                 <h3 class="text-base font-bold text-gray-800" id="modal-guru-title">Tambah Data Guru/Tendik</h3>
@@ -689,7 +698,7 @@
     </div>
 
     <!-- NEW: Modal Sinkronisasi Spreadsheet -->
-    <div id="modal-sync" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="modal-sync" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden p-6">
             <div class="flex justify-between items-center pb-3 border-b mb-4">
                 <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
@@ -783,6 +792,16 @@
         }
 
         function closeMessageBox() { document.getElementById('message-box').classList.add('hidden'); }
+
+        // --- NEW: Toggle Sidebar untuk Mobile Menu ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if(sidebar && overlay) {
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            }
+        }
 
         // --- STREAMING_CHUNK:Auth and Setup ---
         function checkAuth() {
@@ -929,6 +948,14 @@
                 if (currentUser && currentUser.role !== 'admin') {
                     const select = document.getElementById('scan-guru-id');
                     if (select) select.value = currentUser.id;
+                }
+            }
+            
+            // NEW: Auto Close sidebar di layar HP saat menu di klik
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
                 }
             }
         }
